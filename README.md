@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="seekr logo" width="150"/>
+  <img src="docs/seekr-banner.png" alt="seekr logo" width="400"/>
 </p>
 
 # seekr
