@@ -1,1 +1,1 @@
-# seekr-github
+# seekr
