@@ -14,7 +14,9 @@ tested and working with rekordbox v7.2 on windows 11. macOS coming soon
 4. seekr.py creates reports telling you what is where
 
 once the python resources are setup, it's usage is simply:
-> seekr.py -i tracks.json -d Z:\\media\\audio\\music\\dj-library --score 80 --report --dllist
+``` 
+seekr.py -i tracks.json -d Z:\\media --score 80 -dllist
+```
 
 # first time setup
 a bootstrap script takes care of setting the venv, loading dependencies
@@ -42,9 +44,17 @@ optionally: --report and --dllist
 - *--report*: this tells seekr to output a .csv report of its findings, all of them
 - *--dllist*: another .csv report only showing the tracks you're missing so you have a checklist while shopping
 
-> python seekr.py -i tracks.json -d Z:\\media --score 80 --report --dllist
+```
+python seekr.py -i tracks.json -d Z:\\media --score 80 --report --dllist
+```
 *or*
-> python seekr.py -i tracks.json -d Z:\\media --score 80
+```
+python seekr.py -i tracks.json -d Z:\\media --score 80 --dllist
+```
+*or*
+```
+python seekr.py -i tracks.json -d Z:\\media --score 80
+```
 
 reports are saved next to the seekr.py script, if you chose to print them
 
