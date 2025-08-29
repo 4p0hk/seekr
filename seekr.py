@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 first ever run:
-1. setup.ps1
+1. setup script
 
 otherwise:
 seekr.py -i tracks.json -d Z:\\music --score 80
 """
 import sys
+import os
 import importlib.util
 import argparse
 import json
@@ -19,9 +20,41 @@ from datetime import datetime
 
 # -- ensure venv and dependencies exist ---------------------------------------
 venv_dir = Path(__file__).parent / '.venv'
-if venv_dir.exists() and not sys.prefix.startswith(str(venv_dir)):
-    print("Warning: Virtual environment '.venv' is not active. Please activate it and retry.")
+if not venv_dir.exists():
+    print("Error: no .venv found. Please run the setup script first.")
     sys.exit(1)
+
+# Check if current interpreter is inside .venv
+try:
+    in_venv = Path(sys.prefix).resolve().as_posix().startswith(venv_dir.resolve().as_posix())
+except Exception:
+    in_venv = False
+
+if not in_venv:
+    # Try to re-run using the venv's python (avoid exec hang in some shells)
+    scripts_dir = 'Scripts' if os.name == 'nt' else 'bin'
+    candidates = [
+        venv_dir / scripts_dir / ('python.exe' if os.name == 'nt' else 'python3'),
+        venv_dir / scripts_dir / ('python'     if os.name != 'nt' else 'python.exe'),
+    ]
+    venv_python = next((p for p in candidates if p.exists()), None)
+    if venv_python is not None:
+        print(f"[seekr] initializing, app will relaunch and load shortly…")
+        try:
+            completed = subprocess.run([str(venv_python), *sys.argv], check=False)
+            sys.exit(completed.returncode)
+        except KeyboardInterrupt:
+            # Propagate Ctrl+C cleanly
+            sys.exit(130)
+        except Exception as e:
+            print(f"Error: failed to launch in venv: {e}")
+            sys.exit(1)
+    else:
+        print("Error: .venv exists but no Python interpreter found inside it."
+              "       Re-run the setup script or recreate the venv.")
+        sys.exit(1)
+
+# If we reach here, we're in the venv.
 required = ['rapidfuzz', 'pyrekordbox', 'tabulate', 'colorama', 'tqdm']
 missing = [m for m in required if importlib.util.find_spec(m) is None]
 if missing:
@@ -42,12 +75,12 @@ colorama_init(autoreset=True)
 # patterns to strip out mix-annotations and feature-annotations
 ORIGINAL_MIX_PATTERNS = ['(original mix)', 'original mix', '(orig mix)', 'orig mix']
 FEAT_PATTERNS = [
-    r"\(ft\.?.*?\)",    # "(ft. djinn)"
-    r"\(feat\.?.*?\)",  # "(feat. djinn)"
-    r",\s*ft\.?.*$",    # ", ft. djinn"
-    r",\s*feat\.?.*$",  # ", feat. djinn"
-    r"\s+ft\.?.*$",     # " ft. djinn"
-    r"\s+feat\.?.*$",   # " feat. djinn"
+    r"\(ft\.?\.?.*?\)",    # "(ft. djinn)"
+    r"\(feat\.?\.?.*?\)",  # "(feat. djinn)"
+    r",\s*ft\.?\.?.*$",    # ", ft. djinn"
+    r",\s*feat\.?\.?.*$",  # ", feat. djinn"
+    r"\s+ft\.?\.?.*$",     # " ft. djinn"
+    r"\s+feat\.?\.?.*$",   # " feat. djinn"
 ]
 
 def strip_mix_annotations(s):
@@ -93,6 +126,7 @@ def setup_logging(debug):
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
     if debug:
         logger.debug(Fore.YELLOW + 'debug mode enabled')
+
 
 def scan_rekordbox(contents, title, artist, score_cut):
     """
@@ -311,7 +345,7 @@ def main():
         print(tabulate(rows, ['artist', 'title', 'rb_count', 'fs_count'], tablefmt='grid'))
 
         for r in results:
-            term = f"{r['artist']} - {r['title']}".strip(' - ')
+            term = f"{r['artist']} - {r['title']}`".strip(' - ')
             if r['rb_count'] > 0:
                 print(f"\n[{term}] Rekordbox matches ({r['rb_count']}):")
                 for h in r['rb_items']:
