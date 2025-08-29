@@ -1,6 +1,7 @@
 <p align="center">
   <img src="docs/logo.png" alt="seekr logo" width="150"/>
 </p>
+
 # seekr
 ## about the app
 seekr is a tool that helps you figure out which tracks from your playlist on a streaming service exist either in your computer's music folder, or in rekordbox.
